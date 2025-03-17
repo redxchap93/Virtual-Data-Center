@@ -9,6 +9,7 @@ Features:
 - Enhanced Networking Details Section with Improved UI
 - Custom Scenario Input with AI Execution and Access Steps (Filtered Commands Only)
 - Full Implementation of 10 Phases
+- Button to Self-Healing Dashboard
 """
 
 import subprocess
@@ -49,14 +50,14 @@ app_state = {
     "environment": "docker",
     "docker_containers": {},
     "k8s_namespaces": {},
-    "k8s_pods": {},  # Added for tracking running pods
+    "k8s_pods": {},
     "terminal_output": Queue(maxsize=100),
     "ai_response": "",
     "scenario_result": "",
     "scaling_events": [],
     "networking_data": {"docker": [], "k8s": []},
     "custom_scenario_result": "",
-    "resource_status": {"docker": [], "k8s": []}  # Added for detailed resource status
+    "resource_status": {"docker": [], "k8s": []}
 }
 docker_feed_queue = Queue(maxsize=500)
 k8s_feed_queue = Queue(maxsize=500)
@@ -82,7 +83,7 @@ NOTIFICATION_CONFIG = {
     "discord": "https://discord.com/api/webhooks/AAA/BBB"
 }
 
-# 100 Docker Scenarios
+# 100 Docker Scenarios (unchanged)
 DOCKER_SCENARIOS = [
     {"title": "Deploy Nginx Web", "desc": "Launch Nginx container", "cmd": "docker run -d --name nginx_web -p 80:80 nginx:latest"},
     {"title": "Scale App Instances", "desc": "Run 3 app instances", "cmd": "docker run -d --name app_1 ubuntu sleep infinity && docker run -d --name app_2 ubuntu sleep infinity && docker run -d --name app_3 ubuntu sleep infinity"},
@@ -96,7 +97,7 @@ DOCKER_SCENARIOS = [
     {"title": "Start MongoDB", "desc": "Run MongoDB container", "cmd": "docker run -d --name mongo_db -p 27017:27017 mongo:latest"}
 ] + [{"title": f"Run Test Container {i}", "desc": f"Launch test container {i}", "cmd": f"docker run -d --name test_container_{i} ubuntu sleep infinity"} for i in range(1, 91)]
 
-# 100 Kubernetes Scenarios
+# 100 Kubernetes Scenarios (unchanged)
 K8S_SCENARIOS = [
     {"title": "Deploy Nginx Pod", "desc": "Create Nginx deployment", "cmd": "kubectl create deployment nginx --image=nginx --replicas=1"},
     {"title": "Expose Nginx Service", "desc": "Expose Nginx as NodePort", "cmd": "kubectl expose deployment nginx --port=80 --type=NodePort"},
@@ -126,7 +127,7 @@ K8S_SCENARIOS = [
     for i in range(1, 41)
 ]
 
-# Async Command Execution
+# Async Command Execution (unchanged)
 async def async_run_command(cmd):
     try:
         proc = await asyncio.create_subprocess_shell(
@@ -137,17 +138,17 @@ async def async_run_command(cmd):
         logging.error(f"Command failed: {cmd}, Error: {e}")
         return False, "", str(e)
 
-# Get Access Info for Docker (Async)
+# Get Access Info for Docker (unchanged)
 async def get_docker_access_info(container_name):
     success, out, _ = await async_run_command(f"docker inspect {container_name} --format '{{{{.NetworkSettings.Ports}}}}'")
     if success and out:
         ports = out.strip()
         if ports:
             port_info = ports.split(":")[-1].split("}")[0] if ":" in ports else ports
-            return f"http://192.168.1.152:{port_info}"  # Updated with your IP
+            return f"http://192.168.1.152:{port_info}"
     return "Access info unavailable"
 
-# Get Access Info for Kubernetes (Async)
+# Get Access Info for Kubernetes (unchanged)
 async def get_k8s_access_info(service_name):
     success, out, _ = await async_run_command(f"kubectl get service {service_name} -o jsonpath='{{.spec.ports[0].nodePort}}'")
     if success and out:
@@ -157,7 +158,7 @@ async def get_k8s_access_info(service_name):
             return f"http://{cluster_ip.strip()}:{node_port}"
     return "Access info unavailable"
 
-# AI-Generated Custom Scenario Execution with Filtering
+# AI-Generated Custom Scenario Execution (unchanged)
 async def execute_custom_docker_scenario(request_text):
     if not ollama:
         return "AI unavailable.", ""
@@ -221,7 +222,7 @@ async def execute_custom_k8s_scenario(request_text):
     k8s_feed_queue.put(f"Custom K8s scenario '{request_text}' executed by AI at {datetime.now()}")
     return result, cmd
 
-# Networking Data Collection
+# Networking Data Collection (unchanged)
 async def update_networking_status():
     while True:
         with state_lock:
@@ -240,7 +241,7 @@ async def update_networking_status():
             networking_feed_queue.put(f"K8s Networking Update: {len(k8s_services)} services, {len(k8s_pods)} pods at {datetime.now()}")
         await asyncio.sleep(5)
 
-# Notification Functions
+# Notification Functions (unchanged)
 async def send_email_notification(subject, message):
     try:
         msg = MIMEText(message)
@@ -261,7 +262,7 @@ async def send_slack_discord_notification(message):
         await session.post(NOTIFICATION_CONFIG["discord"], json={"content": message})
         logging.info(f"Slack/Discord sent: {message}")
 
-# AI Integration
+# AI Integration (unchanged)
 def ai_chat(user_txt, system_txt=None):
     if not ollama:
         return "AI unavailable."
@@ -274,7 +275,7 @@ def ai_chat(user_txt, system_txt=None):
         logging.error(f"AI error: {e}")
         return "AI error occurred."
 
-# AI Auto-Scaling
+# AI Auto-Scaling (unchanged)
 async def ai_auto_scaling():
     while True:
         with state_lock:
@@ -296,7 +297,7 @@ async def ai_auto_scaling():
                 await send_slack_discord_notification(event)
         await asyncio.sleep(60)
 
-# Weekly Report
+# Weekly Report (unchanged)
 def weekly_report():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -309,7 +310,7 @@ def weekly_report():
             time.sleep(24 * 3600)
         time.sleep(3600)
 
-# Docker Management
+# Docker Management (unchanged)
 async def update_docker_status():
     success, out, _ = await async_run_command("docker ps -a --format '{{.Names}} {{.Status}}'")
     if success:
@@ -345,7 +346,7 @@ async def docker_action(action, container=None, cmd=None):
         app_state["terminal_output"].put(f"$ {cmd}\n{out if success else err}")
         docker_feed_queue.put(f"Docker: Executed '{cmd}' in {container}: {'Success' if success else 'Failed'} at {datetime.now()}")
 
-# Kubernetes Management
+# Kubernetes Management (unchanged)
 async def update_k8s_status():
     success, out, _ = await async_run_command("kubectl get ns --no-headers -o custom-columns=NAME:.metadata.name")
     if success:
@@ -384,7 +385,7 @@ async def k8s_action(action, namespace=None, cmd=None):
         app_state["terminal_output"].put(f"$ {cmd}\n{out if success else err}")
         k8s_feed_queue.put(f"K8s: Executed '{cmd}': {'Success' if success else 'Failed'} at {datetime.now()}")
 
-# Real-Time Status Updater
+# Real-Time Status Updater (unchanged)
 def status_updater():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -393,13 +394,13 @@ def status_updater():
         loop.run_until_complete(update_k8s_status())
         time.sleep(1)
 
-# Start Background Tasks
+# Start Background Tasks (unchanged)
 threading.Thread(target=status_updater, daemon=True).start()
 threading.Thread(target=lambda: asyncio.run(ai_auto_scaling()), daemon=True).start()
 threading.Thread(target=weekly_report, daemon=True).start()
 threading.Thread(target=lambda: asyncio.run(update_networking_status()), daemon=True).start()
 
-# SSE Feeds
+# SSE Feeds (unchanged)
 @app.route("/docker_feed_stream")
 def docker_feed_stream():
     def event_stream():
@@ -427,7 +428,7 @@ def networking_feed_stream():
             time.sleep(1)
     return Response(event_stream(), mimetype="text/event-stream")
 
-# Template
+# Updated Template with Self-Healing Button
 MAIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -458,13 +459,14 @@ MAIN_TEMPLATE = """
             <div class="flex space-x-4 items-center">
                 <span class="text-gray-300">User: {{ user }} ({{ role }})</span>
                 <form method="post" action="/set_environment" class="flex space-x-2">
-                    <select name="environment" class="bg-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="environment" class descans="bg-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="docker" {% if environment=='docker' %}selected{% endif %}>Docker</option>
                         <option value="k8s" {% if environment=='k8s' %}selected{% endif %}>Kubernetes</option>
                     </select>
                     <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition duration-200">Switch</button>
                 </form>
                 <a href="http://192.168.1.152:5001/advanced_features" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition duration-200">Advanced AI Features</a>
+                <a href="http://192.168.1.152:5002/self_healing" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded transition duration-200">Self-Healing Dashboard</a>
                 <form method="post" action="/logout">
                     <button class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition duration-200">Logout</button>
                 </form>
@@ -632,7 +634,7 @@ MAIN_TEMPLATE = """
 </html>
 """
 
-# Routes
+# Routes (unchanged)
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
