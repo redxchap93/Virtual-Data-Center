@@ -10,6 +10,7 @@ Features:
 - Custom Scenario Input with AI Execution and Access Steps (Filtered Commands Only)
 - Full Implementation of 10 Phases
 - Button to Self-Healing Dashboard
+- Button to Decision-Making Dashboard
 """
 
 import subprocess
@@ -428,7 +429,7 @@ def networking_feed_stream():
             time.sleep(1)
     return Response(event_stream(), mimetype="text/event-stream")
 
-# Updated Template with Self-Healing Button
+# Updated Template with Decision-Making Button
 MAIN_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -459,7 +460,7 @@ MAIN_TEMPLATE = """
             <div class="flex space-x-4 items-center">
                 <span class="text-gray-300">User: {{ user }} ({{ role }})</span>
                 <form method="post" action="/set_environment" class="flex space-x-2">
-                    <select name="environment" class descans="bg-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="environment" class="bg-gray-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="docker" {% if environment=='docker' %}selected{% endif %}>Docker</option>
                         <option value="k8s" {% if environment=='k8s' %}selected{% endif %}>Kubernetes</option>
                     </select>
@@ -467,6 +468,7 @@ MAIN_TEMPLATE = """
                 </form>
                 <a href="http://192.168.1.152:5001/advanced_features" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded transition duration-200">Advanced AI Features</a>
                 <a href="http://192.168.1.152:5002/self_healing" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded transition duration-200">Self-Healing Dashboard</a>
+                <a href="http://192.168.1.152:5003/decision_making" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded transition duration-200">Decision-Making Dashboard</a>
                 <form method="post" action="/logout">
                     <button class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition duration-200">Logout</button>
                 </form>
